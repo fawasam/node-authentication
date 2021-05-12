@@ -1,9 +1,21 @@
-//jshint esversion:6
+//level 2 security
+//new dependency for       npm i mongoose-encryption     &&         npm  i dotenv
+
+//mongoose-encryption method
+
+  //in Save Section the password goes to encrypted
+  //in find section the password goes to decrypted
+
+  require("dotenv").config(); 
 const express = require("express");
 const bodyParse = require("body-parser");
 const ejs = require("ejs");
 const app = express();
 const mongoose = require("mongoose");
+const encrypt=require("mongoose-encryption");
+
+
+console.log(process.env.SECRET)
 
 
 app.use(express.static("public"));
@@ -12,12 +24,20 @@ app.use(bodyParse.urlencoded({ extended: true }));
 
 mongoose.connect("mongodb://localhost:27017/userDB" ,{useNewUrlParser:true ,useUnifiedTopology:true});
 
-const userSchema ={
+const userSchema = new mongoose.Schema({
   email:String,
   password:String
-};
+});
+
+
+userSchema.plugin(encrypt , {secret:process.env.SECRET , encryptedFields:["password"]});
+
+
 const User =new mongoose.model("User" ,userSchema); 
 
+
+
+//home
 app.get("/", (req, res) => {
   res.render("home");
 });
@@ -43,6 +63,7 @@ app.post("/register", (req, res) => {
     }
    //EMAIL EXIST CHECK SECTION END
     else{
+       //in Save Section the password goes to encrypted
       newUser.save( (err, user) => {
         if (err) {
           console.log(err);
@@ -65,6 +86,7 @@ app.post('/login' ,(req, res) => {
   const username = req.body.username
   
   const password = req.body.password
+  //in find section the password goes to decrypted
   User.findOne({ email: username }, (err, foundUser) => {
     if (err) {
       console.log(err);
